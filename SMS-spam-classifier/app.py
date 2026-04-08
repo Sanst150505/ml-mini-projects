@@ -64,9 +64,5 @@ if st.button('Predict'):
 
         if result == 1:
             st.error("🚨 Spam Message")
-            if hasattr(model, "predict_proba"):
-                st.write(f"Confidence: {prob[1]*100:.2f}%")
         else:
             st.success("✅ Not Spam")
-            if hasattr(model, "predict_proba"):
-                st.write(f"Confidence: {prob[0]*100:.2f}%")
