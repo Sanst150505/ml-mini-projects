@@ -2,18 +2,18 @@ import streamlit as st
 import pickle
 import string
 import nltk
+import os
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 
-# Download only if needed
 try:
     nltk.data.find('tokenizers/punkt')
-except:
+except LookupError:
     nltk.download('punkt')
 
 try:
     nltk.data.find('corpora/stopwords')
-except:
+except LookupError:
     nltk.download('stopwords')
 
 ps = PorterStemmer()
@@ -24,38 +24,55 @@ def transform_text(text):
     text = nltk.word_tokenize(text)
 
     y = []
-    for i in text:
-        if i.isalnum():
-            y.append(i)
+    for word in text:
+        if word.isalnum():
+            y.append(word)
 
     text = y[:]
     y.clear()
 
-    for i in text:
-        if i not in stop_words and i not in string.punctuation:
-            y.append(i)
+    for word in text:
+        if word not in stop_words and word not in string.punctuation:
+            y.append(word)
 
     text = y[:]
     y.clear()
 
-    for i in text:
-        y.append(ps.stem(i))
+    for word in text:
+        y.append(ps.stem(word))
 
     return " ".join(y)
 
-tfidf = pickle.load(open('vectorizer.pkl', 'rb'))
-model = pickle.load(open('model.pkl', 'rb'))
+base_path = os.path.dirname(__file__)
+vectorizer_path = os.path.join(base_path, "vectorizer.pkl")
+model_path = os.path.join(base_path, "model.pkl")
 
-st.title("SMS Spam Classifier")
+tfidf = pickle.load(open(vectorizer_path, "rb"))
+model = pickle.load(open(model_path, "rb"))
 
-input_sms = st.text_area("Enter the message")
+st.set_page_config(page_title="SMS Spam Classifier", page_icon="📩")
+
+st.title("📩 SMS Spam Classifier")
+st.write("Detect whether a message is Spam or Not Spam using Machine Learning")
+
+input_sms = st.text_area("Enter your message")
 
 if st.button('Predict'):
-    transformed_sms = transform_text(input_sms)
-    vector_input = tfidf.transform([transformed_sms])
-    result = model.predict(vector_input)[0]
-
-    if result == 1:
-        st.header("Spam 🚨")
+    if input_sms.strip() == "":
+        st.warning("⚠️ Please enter a message")
     else:
-        st.header("Not Spam ✅")
+        transformed_sms = transform_text(input_sms)
+        vector_input = tfidf.transform([transformed_sms])
+        result = model.predict(vector_input)[0]
+
+        if hasattr(model, "predict_proba"):
+            prob = model.predict_proba(vector_input)[0]
+
+        if result == 1:
+            st.error("🚨 Spam Message")
+            if hasattr(model, "predict_proba"):
+                st.write(f"Confidence: {prob[1]*100:.2f}%")
+        else:
+            st.success("✅ Not Spam")
+            if hasattr(model, "predict_proba"):
+                st.write(f"Confidence: {prob[0]*100:.2f}%")
