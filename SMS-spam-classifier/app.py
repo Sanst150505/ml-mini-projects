@@ -6,15 +6,9 @@ import os
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('punkt_tab')
+nltk.download('stopwords')
 
 ps = PorterStemmer()
 stop_words = set(stopwords.words('english'))
@@ -52,7 +46,7 @@ model = pickle.load(open(model_path, "rb"))
 
 st.set_page_config(page_title="SMS Spam Classifier", page_icon="📩")
 
-st.title("📩 SMS Spam Classifier")
+st.title(" SMS Spam Classifier")
 st.write("Detect whether a message is Spam or Not Spam using Machine Learning")
 
 input_sms = st.text_area("Enter your message")
